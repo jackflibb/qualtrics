@@ -255,7 +255,7 @@ score_questionnaire<-function(dataDF, rubricsDF, SID, psych = FALSE, ...){
   if(psych){
     return(score_questionnaire_psych(dataDF, rubricsDF, ...))
   } else {
-    return(score_questionnaire_dsn(dataDF, rubricsDF, ...))
+    return(score_questionnaire_dsn(dataDF, rubricsDF, SID, ...))
   }
 }
 
@@ -274,13 +274,19 @@ score_questionnaire_dsn <- function(dataDF,rubricsDF,SID){
   if(any(dim(dataDF)[1] < 1, dim(rubricsDF)[1] < 1)){
       return(data.frame())
   }
+  
+  #rename subject ID column to SID
+  dataDF = dataDF %>%
+    rename("SID" = eval(SID))
+  
   scores_with_scoring_params<-rubricsDF  %>%
     left_join(
       dataDF,
       by=c(
         #"data_file_name" = "survey_name",
         "column_name" = "item")) %>%
-    filter(!(include %in% c(0,NA,'0','NA',''))) # this filters the rubrics
+    filter(!(include %in% c(0,NA,'0','NA',''))) %>% # this filters the rubrics
+    filter(!is.na(survey_name)) # this filters out unused rubrics
 
   nonNumeric_items <- scores_with_scoring_params %>% filter(include %in% 'I')
   
